@@ -24,7 +24,6 @@ public class Entity : MonoBehaviour
     Health -= damage;
 
     healthBar.value = Health;
-    print(healthBar.value);
 
     if (Health <= 0)
     {
