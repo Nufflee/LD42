@@ -5,7 +5,7 @@ using UnityEngine.AI;
 
 public class SoliderController : MonoBehaviour
 {
-  private List<Solider> soliders;
+  public static List<Solider> soliders;
   private new Camera camera;
   
   private void Start()
