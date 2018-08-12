@@ -19,7 +19,15 @@ public class Solider : Entity
 
     damage = 25.0f;
 
-    onDeath += () => { SoliderController.soliders.Remove(this); };
+    onDeath += () =>
+    {
+      SoliderController.soliders.Remove(this);
+
+      if (currentlyAttacking)
+      {
+        currentlyAttacking.isBeingAttacked = false;
+      }
+    };
   }
 
   private void Update()
@@ -44,7 +52,7 @@ public class Solider : Entity
       return;
     }
 
-    List<Collider> colliders = Physics.OverlapSphere(transform.position, 2.5f, LayerMask.GetMask("Enemy")).Where((e) => e.GetComponent<Enemy>().isBeingAttacked == false).ToList();
+    List<Collider> colliders = Physics.OverlapSphere(transform.position, 3.0f, LayerMask.GetMask("Enemy")).Where((e) => e.GetComponent<Enemy>().isBeingAttacked == false).ToList();
 
     if (colliders.Count > 0)
     {

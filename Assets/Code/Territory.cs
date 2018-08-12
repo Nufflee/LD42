@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -14,6 +16,14 @@ public class Tile
   public float soliderProgress;
   public float enemyProgress;
   public bool isBlue;
+  public bool isRed;
+}
+
+public enum TileColor
+{
+  Blue,
+  Red,
+  White
 }
 
 public class Territory : MonoBehaviour
@@ -32,6 +42,7 @@ public class Territory : MonoBehaviour
   private Slider playerConquerProgress;
   private Image playerConquerProgressImage;
   private Tile playerConquering;
+  private Tile enemyConquering;
   private Color red = new Color(255 / 255, 1 / 255, 5 / 255);
   private Color blue = new Color(0 / 255, 49 / 255, 255 / 255);
   private int size = 6;
@@ -59,6 +70,8 @@ public class Territory : MonoBehaviour
 
         GameObject tile = Instantiate(whiteHexagonPrefab, position, whiteHexagonPrefab.transform.rotation, transform);
         tile.name = "MinimapTile";
+        tile.layer = LayerMask.NameToLayer("Minimap");
+        tile.transform.GetChild(0).gameObject.layer = tile.layer;
 
         tiles.Add(new Tile
         {
@@ -68,15 +81,28 @@ public class Territory : MonoBehaviour
       }
     }
 
-    SetTile(Vector2Int.zero, false);
+    SetTile(Vector2Int.zero, TileColor.Blue);
 
-    GetTileAtPosition(Vector2Int.zero).enemyProgress = 100;
+    GetTileAtPosition(Vector2Int.zero).enemyProgress = 0;
+    GetTileAtPosition(Vector2Int.zero).soliderProgress = 0;
   }
 
   private void Update()
   {
-    foreach (Tile tile in tiles)
+    for (int i = tiles.Count - 1; i >= 0; i--)
     {
+      Tile tile = tiles[i];
+      if (tile.soliderProgress == 0 && tile.enemyProgress == 0)
+      {
+        if (tile.isBlue || tile.isRed)
+        {
+          print("setting to white");
+          SetTile(tile.position, TileColor.White, tile);
+          tile.isBlue = false;
+          tile.isRed = false;
+        }
+      }
+
       tile.soliders.Clear();
       tile.enemies.Clear();
     }
@@ -101,12 +127,12 @@ public class Territory : MonoBehaviour
         isPlayerConquering = false;
         playerConquerProgress.gameObject.SetActive(false);
 
-        return;
+        break;
       }
 
       if (tile == null)
       {
-        return;
+        break;
       }
 
       if (playerConquering != null)
@@ -138,7 +164,7 @@ public class Territory : MonoBehaviour
           playerConquerProgress.value = 100;
           isPlayerConquering = false;
 
-          return;
+          break;
         }
 
         if (tile.enemyProgress > 0)
@@ -148,7 +174,7 @@ public class Territory : MonoBehaviour
           playerConquerProgressImage.color = red;
           playerConquerProgress.value = tile.enemyProgress;
 
-          return;
+          break;
         }
 
         tile.soliderProgress += 20.0f * Time.deltaTime;
@@ -158,7 +184,7 @@ public class Territory : MonoBehaviour
 
         if (tile.soliderProgress >= 100)
         {
-          SetTile(tile.position, true, tile);
+          SetTile(tile.position, TileColor.Blue, tile);
         }
       }
     }
@@ -166,10 +192,58 @@ public class Territory : MonoBehaviour
     foreach (Enemy enemy in EnemyController.enemies)
     {
       RaycastHit hit;
+      Tile tile = null;
+
+      if (enemy.isBeingAttacked)
+      {
+        return;
+      }
 
       if (Physics.Raycast(enemy.transform.position, Vector3.down, out hit, Mathf.Infinity, LayerMask.GetMask("Ground")))
       {
-        GetTileAtWorldPosition(hit.collider.transform.position).enemies.Add(enemy);
+        tile = GetTileAtWorldPosition(hit.collider.transform.position);
+
+        tile.enemies.Add(enemy);
+      }
+
+      if (tile == null)
+      {
+        return;
+      }
+
+      if (enemyConquering != null)
+      {
+        enemyConquering = tile.enemies.Count < 3 ? null : tile;
+      }
+
+      if (tile.enemies.Count > 3)
+      {
+        enemyConquering = tile;
+
+        if (tile.isRed)
+        {
+          isEnemyConquering = false;
+
+          return;
+        }
+
+        isEnemyConquering = true;
+
+        if (tile.soliderProgress > 0)
+        {
+          tile.soliderProgress -= 8.0f * Time.deltaTime;
+
+          return;
+        }
+
+        tile.enemyProgress += 8.0f * Time.deltaTime;
+
+        print(tile.enemyProgress);
+
+        if (tile.enemyProgress >= 100)
+        {
+          SetTile(tile.position, TileColor.Red, tile);
+        }
       }
     }
   }
@@ -184,24 +258,25 @@ public class Territory : MonoBehaviour
     return tiles.FirstOrDefault((tile) => tile.position == position);
   }
 
-  public void SetTile(Vector2Int position, bool blue, Tile inherit = null)
+  public void SetTile(Vector2Int position, TileColor color, Tile inherit = null)
   {
     Tile tile = GetTileAtPosition(position);
     GameObject newTileGO;
     int index = tiles.IndexOf(tile);
-    Vector2Int oldPosition = tile.position;
 
-    if (blue)
+    Destroy(tile.gameObject);
+
+    if (color == TileColor.Blue)
     {
-      Destroy(tile.gameObject);
-
       newTileGO = Instantiate(blueHexagonPrefab, tile.gameObject.transform.position, blueHexagonPrefab.transform.rotation, transform);
+    }
+    else if (color == TileColor.Red)
+    {
+      newTileGO = Instantiate(redHexagonPrefab, tile.gameObject.transform.position, redHexagonPrefab.transform.rotation, transform);
     }
     else
     {
-      Destroy(tile.gameObject);
-
-      newTileGO = Instantiate(redHexagonPrefab, tile.gameObject.transform.position, redHexagonPrefab.transform.rotation, transform);
+      newTileGO = Instantiate(whiteHexagonPrefab, tile.gameObject.transform.position, whiteHexagonPrefab.transform.rotation, transform);
     }
 
     if (inherit == null)
@@ -211,8 +286,14 @@ public class Territory : MonoBehaviour
 
     Tile newTile = inherit;
 
+    bool blue = color == TileColor.Blue;
+
     newTile.isBlue = blue;
+    newTile.isRed = !blue;
     newTile.gameObject = newTileGO;
+
+    newTileGO.layer = LayerMask.NameToLayer("Minimap");
+    newTileGO.transform.GetChild(0).gameObject.layer = newTileGO.layer;
 
     tiles[index] = newTile;
 

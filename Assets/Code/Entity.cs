@@ -13,10 +13,18 @@ public class Entity : MonoBehaviour
   protected Entity currentlyAttacking;
   protected float damage = 15.0f;
 
-  private bool isDead;
+  private float lastDamage = -1;
 
   public virtual void Attack(Entity entity)
   {
+  }
+
+  private void Update()
+  {
+    if (Time.time - lastDamage > 2.5f)
+    {
+      isBeingAttacked = false;
+    }
   }
 
   public void Damage(float damage)
@@ -28,9 +36,10 @@ public class Entity : MonoBehaviour
     if (Health <= 0)
     {
       onDeath?.Invoke();
-      isDead = true;
       army.Remove(this);
       Destroy(gameObject);
     }
+
+    lastDamage = Time.time;
   }
 }

@@ -16,6 +16,20 @@ public class Enemy : AIEntity
   {
     agent.speed = Territory.isEnemyConquering ? 1.0f : 4.5f;
 
+    if (Territory.isEnemyConquering)
+    {
+      agent.isStopped = true;
+    }
+    else
+    {
+      if (agent.isStopped)
+      {
+        SetDestination();
+      }
+
+      agent.isStopped = false;
+    }
+
     if (Time.time - lastAttack > 0.7f)
     {
       if (currentlyAttacking)
