@@ -5,9 +5,9 @@ using UnityEngine.AI;
 
 public class SoliderController : MonoBehaviour
 {
-  public static List<Solider> soliders;
+  public static List<Solider> soliders = new List<Solider>();
   private new Camera camera;
-  
+
   private void Start()
   {
     soliders = FindObjectsOfType<Solider>().ToList();
@@ -20,7 +20,7 @@ public class SoliderController : MonoBehaviour
     {
       return;
     }
-    
+
     Ray ray = camera.ScreenPointToRay(Input.mousePosition);
 
     RaycastHit hit;

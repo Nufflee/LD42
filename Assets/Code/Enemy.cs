@@ -14,6 +14,8 @@ public class Enemy : AIEntity
 
   private void Update()
   {
+    agent.speed = Territory.isEnemyConquering ? 1.0f : 4.5f;
+
     if (Time.time - lastAttack > 0.7f)
     {
       if (currentlyAttacking)
@@ -121,5 +123,10 @@ public class Enemy : AIEntity
     yield return new WaitForSeconds(0.85f);
 
     gameObject.Tween($"LookAround{EnemyController.GetId(this)}-3", transform.eulerAngles, transform.eulerAngles + new Vector3(0, 30, 0), 0.35f, TweenScaleFunctions.Linear, tween => { transform.eulerAngles = tween.CurrentValue; });
+  }
+
+  private void OnDestroy()
+  {
+    EnemyController.enemies.Remove(this);
   }
 }

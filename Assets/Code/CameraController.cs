@@ -12,10 +12,13 @@ public class CameraController : MonoBehaviour
 
   private void Update()
   {
+    if (SoliderController.soliders.Count == 0)
+    {
+      return;
+    }
+
     Vector3 mean = SoliderController.soliders.Select((s) => s.transform.position).Aggregate((a, b) => a + b) / SoliderController.soliders.Count;
 
     transform.position = mean + offset;
-
-    transform.LookAt(mean);
   }
 }

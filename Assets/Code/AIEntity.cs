@@ -5,7 +5,7 @@ using Random = UnityEngine.Random;
 
 public class AIEntity : Entity
 {
-  protected NavMeshAgent agent;
+  public NavMeshAgent agent;
 
   private void Start()
   {

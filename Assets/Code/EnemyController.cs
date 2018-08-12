@@ -4,6 +4,7 @@ using UnityEngine;
 public class EnemyController : MonoBehaviour
 {
   public static bool shouldStop;
+  public static List<Enemy> enemies = new List<Enemy>();
 
   private static Dictionary<Enemy, int> enemyIds = new Dictionary<Enemy, int>();
   private GameObject armyPrefab;
@@ -22,12 +23,12 @@ public class EnemyController : MonoBehaviour
 
   private void Spawn()
   {
-    Instantiate(armyPrefab, new Vector3(13, 0, 13), Quaternion.identity);
+    enemies.AddRange(Instantiate(armyPrefab, new Vector3(13, 0, 13), Quaternion.identity).GetComponentsInChildren<Enemy>());
   }
 
   public static int GetId(Enemy enemy)
   {
-    int id = 0;
+    int id;
 
     if (!enemyIds.TryGetValue(enemy, out id))
     {

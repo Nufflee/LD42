@@ -9,7 +9,7 @@ using Random = UnityEngine.Random;
 
 public class Solider : Entity
 {
-  private NavMeshAgent agent;
+  public NavMeshAgent agent;
   private float lastAttack;
 
   private void Start()
@@ -24,11 +24,13 @@ public class Solider : Entity
 
   private void Update()
   {
-    if (Input.GetMouseButtonDown(0) && Time.time - lastAttack > 0.5f && agent.velocity.magnitude > 0.25f)
+    if (Input.GetMouseButtonDown(0) && Time.time - lastAttack > 0.5f)
     {
       Attack();
       lastAttack = Time.time;
     }
+
+    agent.speed = Territory.isPlayerConquering ? 1.0f : 4.5f;
   }
 
   private void Attack()
@@ -49,7 +51,6 @@ public class Solider : Entity
       colliders.Sort((a, b) => a.transform.position.magnitude > b.transform.position.magnitude ? 1 : a.transform.position.magnitude == b.transform.position.magnitude ? 0 : -1);
 
       Enemy enemy = colliders[0].GetComponent<Enemy>();
-
 
       enemy.Damage(damage);
       enemy.isBeingAttacked = true;
